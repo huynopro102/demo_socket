@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+
+        }
+
+        .wrapper {
+            display: flex;
+
+        }
+
+        #nav {
+            width: 20%;
+            /* Giảm chiều rộng của #nav */
+            background-color: #FF6347;
+            /* Mã màu cho màu đỏ */
+            height: 100vh;
+        }
+
+        #chatroom {
+            width: 80%;
+            /* Tăng chiều rộng của #chatroom */
+            background-color: #00FFFF;
+            /* Mã màu cho màu xanh lam */
+            height: 100vh;
+            position: relative;
+        }
+
+        .section-content-box {
+            position: absolute;
+            bottom: 5%;
+            left: 5%;
+        }
+
+        .section-content-box>input {
+            width: 400px;
+            height: 19px;
+        }
+
+        .info-user {
+            padding: 10px;
+            border: 1px solid black;
+            display: inline-block;
+            position: absolute;
+            right: 0;
+            top: 0;
+
+        }
+
+        .info-user>button,
+        h2 {
+            display: inline-block;
+        }
+
+        .section-message-box {
+            line-height: 40px;
+            font-size: 23px;
+            display: inline-block;
+            height: 70%;
+            margin: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="wrapper">
+        <div id="nav">
+            <ul id="list-users">
+                <li>32</li>
+                <li>321</li>
+                <li>dd</li>
+            </ul>
+        </div>
+        <div id="chatroom">
+
+            <div class="section-message-box">
+                <ul>
+               
+
+                </ul>
+            </div>
+            <div class="section-content-box">
+                <input type="text" name="" id="message-content">
+                <button class="btn-send-message">send</button>
+            </div>
+            <div class="info-user">
+                <h2 id="name-user">name</h2>
+                <button id="btn-out">out</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="register-user">
+        <input id="info-username" type="text">
+        <button id="btn-register">register</button>
+    </div>
+
+    <script src="../public/jquery.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script>
+
+        socket = io("http://localhost:4000/")
+
+        // 
+        $(document).ready(() => {
+
+            $(".wrapper").hide()
+            $(".register-user").show()
+
+
+            // khi click chuot vao o input va nhan phim enter
+            $("#message-content").keypress((e) => {
+                if (e.which === 13) {
+                    // Nếu phím nhấn là Enter (mã phím là 13), thực hiện hành động tương ứng
+                    // $(".btn-send-message").click(()=>{
+                        socket.emit("client-send-message", $("#message-content").val())
+                        $("#message-content").empty()
+                    // }); 
+                        
+                }
+            });
+
+            $("#btn-send-message").click(()=>{
+                console.log("click1")
+            })
+
+
+            // gui username
+            socket.on("server-send-username", (data) => {
+                console.log("data ", data)
+                if (data != "") {
+                    $("#name-user").empty()
+                    $("#name-user").append(data)
+                    $(".wrapper").show(1000)
+                    $(".register-user").hide(100)
+                } else {
+                    alert("da ton tai ten nguoi dung ")
+                }
+            })
+
+            // gui all list users
+            socket.on("server-send-arrayUsers", (data) => {
+                $("#list-users").empty(); // Xóa danh sách người dùng cũ trước khi thêm mới
+
+                data.forEach((item, index) => {
+                    $("#list-users").append(`<li>${item}</li>`);
+                });
+
+
+            })
+
+            // gui all list user
+            socket.on("server-send-arrayUser", (data) => {
+                $(".wrapper").hide(100)
+                $(".register-user").show(1000)
+
+            })
+
+            // gui all messages
+            socket.on("server-send-messages", data => {
+                $(".section-message-box > ul").append(`<li> ${data.un} : ${data.ct} </li>`)
+            })
+            $("#btn-register").click(() => {
+                socket.emit("client-send-username", $("#info-username").val())
+            })
+
+            $("#btn-out").click(() => {
+                socket.emit("client-send-out")
+            })
+
+            $(".btn-send-message").click(() => {
+                socket.emit("client-send-message", $("#message-content").val())
+            })
+
+            // phim enter
+
+        })
+
+
+    </script>
+
+</body>
+
+</html>
