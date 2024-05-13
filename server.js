@@ -65,7 +65,7 @@ io.on("connection", (socket) => {
   });
 
   // lang nghe nguoi dung message 
-  socket.on(" ",(data)=>{
+  socket.on("client-send-message",(data)=>{
     console.log("cline send data ",data)
       io.sockets.emit("server-send-messages",{
         un : socket.username , 
