@@ -20,17 +20,13 @@
 
         #nav {
             width: 20%;
-            /* Giảm chiều rộng của #nav */
             background-color: #FF6347;
-            /* Mã màu cho màu đỏ */
             height: 100vh;
         }
 
         #chatroom {
             width: 80%;
-            /* Tăng chiều rộng của #chatroom */
             background-color: #00FFFF;
-            /* Mã màu cho màu xanh lam */
             height: 100vh;
             position: relative;
         }
@@ -56,6 +52,41 @@
 
         }
 
+        .create-room {
+            padding: 10px;
+            border: 1px solid black;
+            display: inline-block;
+            position: absolute;
+            right: 0;
+            top: 15%;
+        }
+
+        .join-room {
+            padding: 10px;
+            border: 1px solid black;
+            display: inline-block;
+            position: absolute;
+            right: 0;
+            top: 25%;
+        }
+
+        .number-room {
+            padding: 10px;
+            border: 1px solid black;
+            display: inline-block;
+            position: absolute;
+            right: 0;
+            top: 35%;
+        }
+        .room{
+            padding : 10px;
+            border: 1px solid black;
+            display: inline-block;
+            position: absolute;
+            right: 2%;
+            top: 55%;  
+        }
+
         .info-user>button,
         h2 {
             display: inline-block;
@@ -75,28 +106,55 @@
 
     <div class="wrapper">
         <div id="nav">
+            <h3 style="margin-left: 20px ;"> danh sach nguoi dung</h3>
             <ul id="list-users">
-                <li>32</li>
-                <li>321</li>
-                <li>dd</li>
             </ul>
         </div>
         <div id="chatroom">
 
+
             <div class="section-message-box">
                 <ul>
-               
-
                 </ul>
             </div>
+
+
             <div class="section-content-box">
                 <input type="text" name="" id="message-content">
                 <button class="btn-send-message">send</button>
             </div>
+
+
+
             <div class="info-user">
                 <h2 id="name-user">name</h2>
                 <button id="btn-out">out</button>
             </div>
+
+            <div class="create-room">
+                <input type="text">
+                <button id="create-room">create</button>
+            </div>
+
+
+            <div class="join-room">
+                <input id="name-room" type="text">
+                <button id="join-room">join</button>
+            </div>
+
+
+            <div class="number-room">
+                <li>danh sach room</li>
+                <ul id="danhsachroom">
+               
+                </ul>
+            </div>
+
+
+            <div class="room">
+            <h3>trang chu</h3>
+            </div>
+
         </div>
     </div>
 
@@ -119,19 +177,27 @@
             $(".register-user").show()
 
 
+            // join-room
+            $("#join-room").click(() => {
+
+                socket.emit("join-room", $("#name-room").val())
+                
+            })
+
+
             // khi click chuot vao o input va nhan phim enter
             $("#message-content").keypress((e) => {
                 if (e.which === 13) {
                     // Nếu phím nhấn là Enter (mã phím là 13), thực hiện hành động tương ứng
                     // $(".btn-send-message").click(()=>{
-                        socket.emit("client-send-message", $("#message-content").val())
-                        $("#message-content").empty()
+                    socket.emit("client-send-message", $("#message-content").val())
+                    $("#message-content").empty()
                     // }); 
-                        
+
                 }
             });
 
-            $("#btn-send-message").click(()=>{
+            $("#btn-send-message").click(() => {
                 console.log("click1")
             })
 
@@ -147,6 +213,25 @@
                 } else {
                     alert("da ton tai ten nguoi dung ")
                 }
+            })
+
+            // danh sach cac nhom 
+            socket.on("server-all-rooms",(data)=>{
+                console.log(data)
+                $("#danhsachroom").empty()
+                data.forEach(item =>{
+                    if(item.includes("create")){
+                        $("#danhsachroom").append(`<li> ${item}</li>`)
+                    }
+               
+                })
+            })
+
+            // nhom hien tai
+            socket.on("server-name-room",(data)=>{
+                console.log(data)
+                $(".room").empty()
+                $(".room").append(`<h3> phong hien tai ${data}</h3>`)
             })
 
             // gui all list users
@@ -189,6 +274,7 @@
 
 
     </script>
+    <script src="../handle.js"></script>
 
 </body>
 
