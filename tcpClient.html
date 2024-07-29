@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>WebSocket Client</title>
+</head>
+<body>
+  <h1>WebSocket Client</h1>
+  <input type="file" id="fileInput">
+  <button id="sendButton">Send File</button>
+  <script>
+    const ws = new WebSocket('ws://localhost:8080');
+
+    ws.onopen = () => {
+      console.log('Connected to server');
+    };
+
+    ws.onmessage = (event) => {
+      console.log('Received from server:', event.data);
+    };
+
+    ws.onclose = () => {
+      console.log('Disconnected from server');
+    };
+
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+
+    document.getElementById('sendButton').addEventListener('click', () => {
+      const fileInput = document.getElementById('fileInput');
+      const file = fileInput.files[0];
+      
+      if (file) {
+        const reader = new FileReader();
+        
+        reader.onload = () => {
+          // reader.result chứa dữ liệu nhị phân của tệp
+          ws.send(reader.result);
+          console.log('File sent to server');
+        };
+        
+        reader.onerror = (error) => {
+          console.error('Error reading file:', error);
+        };
+        
+        reader.readAsArrayBuffer(file); // Đọc tệp dưới dạng dữ liệu nhị phân
+      } else {
+        console.log('No file selected');
+      }
+    });
+  </script>
+</body>
+</html>

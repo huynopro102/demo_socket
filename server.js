@@ -1,4 +1,6 @@
 const express = require("express");
+const moment = require("moment")
+const myapi = require("./router/api")
 const { createServer } = require("node:http");
 const port = 4000;
 const app = express();
@@ -17,55 +19,13 @@ app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "view"));
 
 
-// Crawl data with pagination
-app.use("/api/v1", async (req, res) => {
-  try {
-    const page = parseInt(req.query.page) || 1; 
-    const size = parseInt(req.query.size) || 4; 
-
-    const html = await request('https://123job.vn/tuyen-dung');
-    const $ = cheerio.load(html);
-    const jobList = [];
-
-    $(".job__list-item").each((index, element) => {
-      const job = $(element).find(".job__list-item-content .job__list-item-title").text().trim();
-      const company = $(element).find(".job__list-item-content .job__list-item-company").text().trim();
-      const address = $(element).find(".job__list-item-content .job__list-item-info .address").text().trim();
-      const salary = $(element).find('.job__list-item-info').find('.salary').text().trim();
-
-      jobList.push({
-        job: job,
-        company: company,
-        address: address,
-        salary: salary
-      });
-    });
-  
-
-        const totalItems = jobList.length;
-        const totalPages = Math.ceil(totalItems / size);
-        const startIndex = (page - 1) * size;
-        const endIndex = Math.min(startIndex + size, totalItems);
-    
-        const paginatedJobs = jobList.slice(startIndex, endIndex);
-    
-        res.status(200).json({
-          page: page,
-          size: size,
-          totalItems: totalItems,
-          totalPages: totalPages,
-          jobs: paginatedJobs
-        });
-      } catch (error) {
-        res.status(500).json("server invalid");
-      }
-    });
-
+// router api
+app.use("/api/v1/",myapi)
 
 
 // socket.io
 const { Server } = require("socket.io");
-const { match } = require("node:assert");
+
 const io = new Server(server);
 
 // listening to client
@@ -75,7 +35,6 @@ io.on("connection", (socket) => {
   
   console.log("co nguoi ket noi ", socket.id);
 
- 
 
   // lang nghe ten nguoi dung
   socket.on("client-send-username", (data) => {

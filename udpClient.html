@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>UDP via WebSocket Client</title>
+</head>
+<body>
+  <h1>UDP via WebSocket Client</h1>
+  <button id="sendButton">Send Message</button>
+  <script>
+    const ws = new WebSocket('ws://localhost:12345');
+
+    ws.onopen = () => {
+      console.log('Connected to WebSocket server');
+    };
+
+    ws.onmessage = (event) => {
+      console.log('Received from server:', event.data);
+    };
+
+    ws.onclose = () => {
+      console.log('Disconnected from WebSocket server');
+    };
+
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+
+    document.getElementById('sendButton').addEventListener('click', () => {
+      ws.send('Hello from client udp ');
+    });
+  </script>
+</body>
+</html>
