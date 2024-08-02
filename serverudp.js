@@ -1,18 +1,38 @@
+const WebSocket = require('ws');
 const dgram = require('dgram');
-const server = dgram.createSocket('udp4');
+const udpServer = dgram.createSocket('udp4');
 
-const PORT = 12345;
+const UDP_PORT = 12345;
+const WS_PORT = 8080;
 
-server.on('message', (msg, rinfo) => {
-  console.log(`Received UDP message: ${msg} from ${rinfo.address}:${rinfo.port}`);
-  // Xử lý dữ liệu UDP ở đây
+// UDP server
+udpServer.bind(UDP_PORT, () => {
+  console.log(`UDP Server listening on port ${UDP_PORT}`);
 });
 
-server.on('error', (err) => {
-  console.error(`UDP server error:\n${err.stack}`);
-  server.close();
+// WebSocket server
+const wss = new WebSocket.Server({ port: WS_PORT });
+
+wss.on('connection', (ws) => {
+  console.log('New WebSocket connection');
+  
+  ws.on('message', (message) => {
+    console.log(`Received WebSocket message: ${message}`);
+    // Send message to UDP server
+    udpServer.send(message, UDP_PORT, 'localhost', (err) => {
+      if (err) {
+        console.error('Failed to send UDP message:', err);
+      }
+    });
+  });
+
+  ws.on('close', () => {
+    console.log('WebSocket connection closed');
+  });
+
+  ws.on('error', (error) => {
+    console.error('WebSocket error:', error);
+  });
 });
 
-server.bind(PORT, () => {
-  console.log(`UDP Server listening on port ${PORT}`);
-});
+console.log(`WebSocket Server listening on port ${WS_PORT}`);

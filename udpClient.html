@@ -8,7 +8,7 @@
   <h1>UDP via WebSocket Client</h1>
   <button id="sendButton">Send Message</button>
   <script>
-    const ws = new WebSocket('ws://localhost:12345');
+    const ws = new WebSocket('ws://localhost:8080');
 
     ws.onopen = () => {
       console.log('Connected to WebSocket server');
@@ -27,7 +27,7 @@
     };
 
     document.getElementById('sendButton').addEventListener('click', () => {
-      ws.send('Hello from client udp ');
+      ws.send('Hello from client udp');
     });
   </script>
 </body>
