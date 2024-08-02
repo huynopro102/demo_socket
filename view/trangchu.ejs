@@ -10,12 +10,10 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-
         }
 
         .wrapper {
             display: flex;
-
         }
 
         #nav {
@@ -49,7 +47,6 @@
             position: absolute;
             right: 0;
             top: 0;
-
         }
 
         .create-room {
@@ -78,13 +75,14 @@
             right: 0;
             top: 35%;
         }
-        .room{
-            padding : 10px;
+
+        .room {
+            padding: 10px;
             border: 1px solid black;
             display: inline-block;
             position: absolute;
             right: 2%;
-            top: 55%;  
+            top: 55%;
         }
 
         .info-user>button,
@@ -96,8 +94,10 @@
             line-height: 40px;
             font-size: 23px;
             display: inline-block;
-            height: 70%;
+            max-height: 800px;
             margin: 10px;
+            overflow-y: scroll;
+            width: 400px;
         }
     </style>
 </head>
@@ -146,13 +146,13 @@
             <div class="number-room">
                 <li>danh sach room</li>
                 <ul id="danhsachroom">
-               
+
                 </ul>
             </div>
 
 
             <div class="room">
-            <h3>trang chu</h3>
+                <h3>trang chu</h3>
             </div>
 
         </div>
@@ -167,10 +167,14 @@
     <script src="/socket.io/socket.io.js"></script>
 
     <script>
-
         socket = io("http://localhost:4000/")
 
-        // 
+        // Hàm để cuộn xuống cuối
+        function scrollToBottom() {
+            var messageBox = document.querySelector('.section-message-box');
+            messageBox.scrollTop = messageBox.scrollHeight;
+        }
+
         $(document).ready(() => {
 
             $(".wrapper").hide()
@@ -179,23 +183,25 @@
 
             // join-room
             $("#join-room").click(() => {
-
                 socket.emit("join-room", $("#name-room").val())
-                
             })
 
 
             // khi click chuot vao o input va nhan phim enter
             $("#message-content").keypress((e) => {
                 if (e.which === 13) {
-                    // Nếu phím nhấn là Enter (mã phím là 13), thực hiện hành động tương ứng
-                    // $(".btn-send-message").click(()=>{
-                    socket.emit("client-send-message", $("#message-content").val())
-                    $("#message-content").empty()
-                    // }); 
 
+                    if ($("#message-content").val() === "") {
+                        return;
+                    }
+
+                    socket.emit("client-send-message", $("#message-content").val())
+                    $("#message-content").val('') // Clear the input field
+                    scrollToBottom(); // Cuộn xuống cuối
                 }
             });
+
+
 
             $("#btn-send-message").click(() => {
                 console.log("click1")
@@ -216,19 +222,19 @@
             })
 
             // danh sach cac nhom 
-            socket.on("server-all-rooms",(data)=>{
+            socket.on("server-all-rooms", (data) => {
                 console.log(data)
                 $("#danhsachroom").empty()
-                data.forEach(item =>{
-                    if(item.includes("create")){
+                data.forEach(item => {
+                    if (item.includes("create")) {
                         $("#danhsachroom").append(`<li> ${item}</li>`)
                     }
-               
+
                 })
             })
 
             // nhom hien tai
-            socket.on("server-name-room",(data)=>{
+            socket.on("server-name-room", (data) => {
                 console.log(data)
                 $(".room").empty()
                 $(".room").append(`<h3> phong hien tai ${data}</h3>`)
@@ -255,7 +261,9 @@
             // gui all messages
             socket.on("server-send-messages", data => {
                 $(".section-message-box > ul").append(`<li> ${data.un} : ${data.ct} </li>`)
+                scrollToBottom(); // Cuộn xuống cuối mỗi khi có tin nhắn mới
             })
+
             $("#btn-register").click(() => {
                 socket.emit("client-send-username", $("#info-username").val())
             })
@@ -266,6 +274,7 @@
 
             $(".btn-send-message").click(() => {
                 socket.emit("client-send-message", $("#message-content").val())
+                scrollToBottom(); // Cuộn xuống cuối khi nhấn nút gửi
             })
 
             // phim enter
