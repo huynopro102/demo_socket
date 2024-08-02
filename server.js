@@ -5,15 +5,13 @@ const { createServer } = require("node:http");
 const port = 4000;
 const app = express();
 const server = createServer(app);
-
-// Middleware để xử lý file upload
 const multer = require("multer");
 const upload = multer({ dest: 'uploads/' });
-
-const cheerio = require("cheerio");
-const request = require("request-promise");
-
 const path = require("path");
+const { Server } = require("socket.io");
+const io = new Server(server);
+
+
 app.use("/public", express.static(path.join(__dirname, "public")));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
@@ -22,14 +20,16 @@ app.set("views", path.join(__dirname, "view"));
 
 app.use("/api/v1/", myapi);
 
-const { Server } = require("socket.io");
-const io = new Server(server);
-
 const arrayUsers = [];
 const messages = [];
 
 io.on("connection", (socket) => {
-    console.log("co nguoi ket noi ", socket.id);
+    console.log("Có người kết nối:", socket.id);
+
+    // Phát ra tiếng động khi có người kết nối
+  
+
+
 
     // Gửi toàn bộ lịch sử tin nhắn (bao gồm cả hình ảnh) khi có người mới kết nối
     socket.emit("server-send-messages-history", messages);
@@ -46,7 +46,7 @@ io.on("connection", (socket) => {
     });
 
     socket.on("disconnect", () => {
-        console.log(`Nguoi dung ${socket.username} da thoat`)
+        console.log(`Người dùng ${socket.username} đã thoát`);
         const index = arrayUsers.indexOf(socket.username);
         if (index !== -1) {
             arrayUsers.splice(index, 1);
@@ -77,14 +77,13 @@ io.on("connection", (socket) => {
     });
 });
 
-
 app.post('/upload', upload.single('image'), (req, res) => {
     if (!req.file) {
         return res.status(400).send('No file uploaded.');
     }
     const imageUrl = `/uploads/${req.file.filename}`;
     io.sockets.emit("server-send-image", { un: req.body.username, img: imageUrl });
-    res.status(200).send('File uploaded successfully ');
+    res.status(200).send('File uploaded successfully');
 });
 
 app.get("/", (req, res) => {
@@ -92,5 +91,5 @@ app.get("/", (req, res) => {
 });
 
 server.listen(port, () => {
-    console.log(`server running at http://localhost:${port}`);
+    console.log(`Server running at http://localhost:${port}`);
 });

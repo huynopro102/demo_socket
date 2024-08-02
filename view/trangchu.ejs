@@ -94,7 +94,7 @@
             line-height: 40px;
             font-size: 23px;
             display: inline-block;
-            max-height: 800px;
+            max-height: 700px;
             margin: 10px;
             overflow-y: scroll;
             width: 600px;
@@ -178,6 +178,18 @@
             messageBox.scrollTop = messageBox.scrollHeight;
         }
 
+        // play join room music
+        function playmusic (){
+            let audio = new Audio("/public/mixkit-correct-answer-tone-2870.wav")
+            audio.play()
+        }
+        
+        // play music enter
+        function playmusic_enter (){
+            let audio = new Audio("/public/click_enter.wav")
+            audio.play()
+        }
+
 
 
 
@@ -191,12 +203,13 @@
                 socket.emit("join-room", $("#name-room").val());
             });
 
-            $("#message-content").keypress((e) => {
+            $("#message-content").keypress(  (e) => {
                 if (e.which === 13) {
                     if ($("#message-content").val() === "") {
                         return;
                     }
                     socket.emit("client-send-message", $("#message-content").val());
+                    playmusic_enter()
                     $("#message-content").val('');
                     scrollToBottom();
                 }
@@ -211,7 +224,8 @@
                 scrollToBottom();
             });
 
-            $("#btn-register").click(() => {
+            $("#btn-register").click( async () => {
+                await playmusic()
                 socket.emit("client-send-username", $("#info-username").val());
             });
 
@@ -220,6 +234,7 @@
             });
 
             $(".btn-send-image").click(() => {
+                playmusic_enter()
                 const fileInput = document.getElementById('image-input');
                 const file = fileInput.files[0];
                 if (!file) {
@@ -314,6 +329,9 @@
                 var messageBox = document.querySelector('.section-message-box');
                 messageBox.scrollTop = messageBox.scrollHeight;
             }
+
+
+
         });
 
 
