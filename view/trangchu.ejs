@@ -97,7 +97,7 @@
             max-height: 800px;
             margin: 10px;
             overflow-y: scroll;
-            width: 400px;
+            width: 600px;
         }
     </style>
 </head>
@@ -121,10 +121,10 @@
 
             <div class="section-content-box">
                 <input type="text" name="" id="message-content">
-                <button class="btn-send-message">send</button>
+                <button class="btn-send-message">Send</button>
+                <input type="file" id="image-input">
+                <button class="btn-send-image">Send Image</button>
             </div>
-
-
 
             <div class="info-user">
                 <h2 id="name-user">name</h2>
@@ -155,6 +155,7 @@
                 <h3>trang chu</h3>
             </div>
 
+
         </div>
     </div>
 
@@ -168,6 +169,8 @@
 
     <script>
         socket = io("http://localhost:4000/")
+        // socket = io("http://huynguyen-nginx.io.vn/")
+
 
         // Hàm để cuộn xuống cuối
         function scrollToBottom() {
@@ -175,111 +178,145 @@
             messageBox.scrollTop = messageBox.scrollHeight;
         }
 
+
+
+
+
+
         $(document).ready(() => {
+            $(".wrapper").hide();
+            $(".register-user").show();
 
-            $(".wrapper").hide()
-            $(".register-user").show()
-
-
-            // join-room
             $("#join-room").click(() => {
-                socket.emit("join-room", $("#name-room").val())
-            })
+                socket.emit("join-room", $("#name-room").val());
+            });
 
-
-            // khi click chuot vao o input va nhan phim enter
             $("#message-content").keypress((e) => {
                 if (e.which === 13) {
-
                     if ($("#message-content").val() === "") {
                         return;
                     }
-
-                    socket.emit("client-send-message", $("#message-content").val())
-                    $("#message-content").val('') // Clear the input field
-                    scrollToBottom(); // Cuộn xuống cuối
+                    socket.emit("client-send-message", $("#message-content").val());
+                    $("#message-content").val('');
+                    scrollToBottom();
                 }
+            });
+
+            $(".btn-send-message").click(() => {
+                if ($("#message-content").val() === "") {
+                    return;
+                }
+                socket.emit("client-send-message", $("#message-content").val());
+                $("#message-content").val('');
+                scrollToBottom();
+            });
+
+            $("#btn-register").click(() => {
+                socket.emit("client-send-username", $("#info-username").val());
+            });
+
+            $("#btn-out").click(() => {
+                socket.emit("client-send-out");
+            });
+
+            $(".btn-send-image").click(() => {
+                const fileInput = document.getElementById('image-input');
+                const file = fileInput.files[0];
+                if (!file) {
+                    alert("tron anh");
+                    return;
+                }
+                const formData = new FormData();
+                formData.append('image', file);
+                formData.append('username', $("#name-user").text());
+
+                $.ajax({
+                    url: '/upload',
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function (data) {
+                        console.log("Image uploaded successfully.");
+                        // Clear the file input
+                        fileInput.value = "";
+                    },
+                    error: function (err) {
+                        console.log("Error uploading image:", err);
+                    }
+                });
+            });
+
+            socket.on("server-send-username", (data) => {
+                if (data != "") {
+                    $("#name-user").empty();
+                    $("#name-user").append(data);
+                    $(".wrapper").show(1000);
+                    $(".register-user").hide(100);
+                    // Khi người dùng đăng nhập thành công, nhận lịch sử tin nhắn
+                    socket.emit("request-message-history");
+                } else {
+                    alert("da ton tai ten nguoi dung ");
+                }
+            });
+
+            socket.on("server-send-messages-history", (data) => {
+                $(".section-message-box > ul").empty(); // Xóa nội dung cũ
+                data.forEach(message => {
+                    if (message.ct) {
+                        $(".section-message-box > ul").append(`<li>${message.un} : ${message.ct}</li>`);
+                    } else if (message.img) {
+                        $(".section-message-box > ul").append(`<li>${message.un} : <img src="${message.img}" style="max-width: 100%;"></li>`);
+                    }
+                });
+                scrollToBottom();
             });
 
 
 
-            $("#btn-send-message").click(() => {
-                console.log("click1")
-            })
-
-
-            // gui username
-            socket.on("server-send-username", (data) => {
-                console.log("data ", data)
-                if (data != "") {
-                    $("#name-user").empty()
-                    $("#name-user").append(data)
-                    $(".wrapper").show(1000)
-                    $(".register-user").hide(100)
-                } else {
-                    alert("da ton tai ten nguoi dung ")
-                }
-            })
-
-            // danh sach cac nhom 
             socket.on("server-all-rooms", (data) => {
-                console.log(data)
-                $("#danhsachroom").empty()
+                $("#danhsachroom").empty();
                 data.forEach(item => {
                     if (item.includes("create")) {
-                        $("#danhsachroom").append(`<li> ${item}</li>`)
+                        $("#danhsachroom").append(`<li> ${item}</li>`);
                     }
+                });
+            });
 
-                })
-            })
-
-            // nhom hien tai
             socket.on("server-name-room", (data) => {
-                console.log(data)
-                $(".room").empty()
-                $(".room").append(`<h3> phong hien tai ${data}</h3>`)
-            })
+                $(".room").empty();
+                $(".room").append(`<h3> phong hien tai ${data}</h3>`);
+            });
 
-            // gui all list users
             socket.on("server-send-arrayUsers", (data) => {
-                $("#list-users").empty(); // Xóa danh sách người dùng cũ trước khi thêm mới
-
-                data.forEach((item, index) => {
+                $("#list-users").empty();
+                data.forEach((item) => {
                     $("#list-users").append(`<li>${item}</li>`);
                 });
+            });
 
-
-            })
-
-            // gui all list user
             socket.on("server-send-arrayUser", (data) => {
-                $(".wrapper").hide(100)
-                $(".register-user").show(1000)
+                $(".wrapper").hide(100);
+                $(".register-user").show(1000);
+            });
 
-            })
-
-            // gui all messages
             socket.on("server-send-messages", data => {
-                $(".section-message-box > ul").append(`<li> ${data.un} : ${data.ct} </li>`)
-                scrollToBottom(); // Cuộn xuống cuối mỗi khi có tin nhắn mới
-            })
+                $(".section-message-box > ul").append(`<li>${data.un} : ${data.ct}</li>`);
+                scrollToBottom();
+            });
 
-            $("#btn-register").click(() => {
-                socket.emit("client-send-username", $("#info-username").val())
-            })
+            socket.on("server-send-image", data => {
+                $(".section-message-box > ul").append(`<li>${data.un} : <img src="${data.img}" style="max-width: 100%;"></li>`);
+                scrollToBottom();
+            });
 
-            $("#btn-out").click(() => {
-                socket.emit("client-send-out")
-            })
+            function scrollToBottom() {
+                var messageBox = document.querySelector('.section-message-box');
+                messageBox.scrollTop = messageBox.scrollHeight;
+            }
+        });
 
-            $(".btn-send-message").click(() => {
-                socket.emit("client-send-message", $("#message-content").val())
-                scrollToBottom(); // Cuộn xuống cuối khi nhấn nút gửi
-            })
 
-            // phim enter
-
-        })
 
 
     </script>
